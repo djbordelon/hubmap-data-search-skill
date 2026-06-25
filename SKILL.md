@@ -13,6 +13,10 @@ The HuBMAP Data Portal provides search access into HuBMAP's data repository via:
 
 Five entity types are searchable: **Dataset**, **Sample**, **Donor**, **Collection**, **Publication**.
 
+**Authentication**: The Search API can be queried anonymously (no token). Anonymous queries are limited to entities with `status: "Published"`. Authenticated queries (with a Globus Bearer token in the `Authorization` header) can access the full authorized set including consortium-level data. Always ask the user whether they want to query anonymously or with a token.
+
+**Indexes**: The API has two indexes — `entities` (default, full entity documents) and `portal` (optimized for the web portal). Use `GET /v3/indices` to check. Default to `entities` unless the user is portal-focused.
+
 This skill translates natural-language search requests into properly structured ElasticSearch JSON queries, sends them to the Search API (with user consent), summarizes the results, and optionally saves them to disk.
 
 ---
@@ -111,19 +115,25 @@ Common patterns to document here:
 Use `term` for exact-match single values:
 
 ```json
-{"term": {"organ.keyword": "Kidney"}}
+{"term": {"entity_type.keyword": "Dataset"}}
 ```
 
 Use `terms` for multi-value filters (OR logic within same field):
 
 ```json
-{"terms": {"dataset_type.keyword": ["Histology", "PAS Stained Microscopy"]}}
+{"terms": {"donor.group_name.keyword": ["Stanford", "Vanderbilt TMC"]}}
 ```
 
-Use `range` for numeric/date ranges:
+Use `range` for numeric/date ranges (timestamps are milliseconds since epoch):
 
 ```json
-{"range": {"created_timestamp": {"gte": "2023-01-01"}}}
+{"range": {"created_timestamp": {"gte": 1672531200000, "lte": 1704067199000}}}
+```
+
+Use `match` for text search on analyzed fields:
+
+```json
+{"match": {"description": "kidney vasculature"}}
 ```
 
 Combine multiple filters in the `filter` array (AND logic):
@@ -133,13 +143,19 @@ Combine multiple filters in the `filter` array (AND logic):
   "query": {
     "bool": {
       "filter": [
-        {"term": {"organ.keyword": "Kidney"}},
-        {"terms": {"dataset_type.keyword": ["Histology", "PAS Stained Microscopy"]}},
-        {"term": {"analyte_class.keyword": "Protein"}}
+        {"term": {"entity_type.keyword": "Dataset"}},
+        {"term": {"status.keyword": "Published"}},
+        {"terms": {"donor.group_name.keyword": ["Stanford", "Vanderbilt TMC"]}}
       ]
     }
   }
 }
+```
+
+**Anonymous queries** — if the user is not providing a token, add a filter for published status:
+
+```json
+{"term": {"status.keyword": "Published"}}
 ```
 
 ### Sorting (optional)
@@ -161,7 +177,7 @@ When returning all fields: omit `_source` entirely or set `"_source": true`.
 When returning specific fields: list them as an array of strings. Use dot notation for nested fields:
 
 ```json
-"_source": ["uuid", "hubmap_id", "donor.mapped_metadata.organ", "created_timestamp"]
+"_source": ["uuid", "hubmap_id", "entity_type", "donor.group_name", "organ", "created_timestamp"]
 ```
 
 ### Pagination
@@ -172,25 +188,128 @@ Use `from` for offset. Default `size` is 5000. If user needs more, ask if they w
 
 ### [[FIELD_MAPPINGS]]
 
-**ES field name** → **Type** → **Description**
+The fields below are derived from the OpenAPI specification at `github.com/hubmapconsortium/search-api/blob/main/search-api-spec.yaml`. Field names and types correspond to the Elasticsearch index documents.
 
-| ES Field Name | Type | Description |
+#### Common Fields (All Entity Types)
+
+| Field | Type | Description |
 |---|---|---|
-| *to be filled by user* | *keyword / text / date / long* | *...* |
+| `uuid` | string | HuBMAP unique identifier (32-hex-digit) |
+| `hubmap_id` | string | Consortium-wide ID (HBM###.ABCD.###) |
+| `entity_type` | string | Dataset, Sample, Donor, Collection, Publication |
+| `description` | string | Free-text description |
+| `data_access_level` | string (enum) | `public` or `consortium` |
+| `created_timestamp` | integer | Milliseconds since epoch (ms) |
+| `created_by_user_displayname` | string | Creator display name |
+| `created_by_user_email` | string | Creator email |
+| `last_modified_timestamp` | integer | Milliseconds since epoch (ms) |
+| `group_name` | string | Globus group display name |
+| `group_uuid` | string | Globus group UUID |
+| `registered_doi` | string | Registered DOI |
+| `doi_url` | string | DOI resolution URL |
 
-Key fields to document:
-- uuid
-- hubmap_id
-- donor.mapped_metadata.organ
-- donor.mapped_metadata.sex
-- dataset_type
-- assay_display_name / assay
-- analyte_class
-- created_timestamp
-- group_name / contributing_consortium
-- publication_title / publication_doi (if join)
-- title
-- description / abstract
+#### Donor-Specific Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `label` | string | Lab-provided de-identified name |
+| `protocol_url` | string | Protocols.io DOI URL |
+| `metadata.organ_donor_data` | array[DonorMetadata] | Deceased donor clinical data (UMLS-coded) |
+| `metadata.living_donor_data` | array[DonorMetadata] | Living donor clinical data (UMLS-coded) |
+
+*DonorMetadata sub-fields:* `code`, `sab`, `concept_id`, `data_type` (Nominal/Numeric), `data_value`, `numeric_operator` (EQ/GT/LT), `units`, `preferred_term`, `grouping_concept`, `grouping_concept_preferred_term`, `grouping_code`, `grouping_sab`, `graph_version`, `start_datetime`, `end_datetime`
+
+#### Sample-Specific Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `sample_category` | string (enum) | `organ`, `block`, `section`, `suspension` |
+| `organ` | string (enum) | Organ code (e.g., `HT`=heart, `LK`=left kidney). Resolve codes via Ontology API |
+| `submission_id` | string | Internal ID with embedded semantics (e.g., VAN0003-LK-1-10) |
+| `direct_ancestor` | object | Direct parent entity in provenance graph |
+| `rui_location` | object | Sample location/orientation in ancestor organ (RUI tool) |
+| `visit` | string | Visit ID for donor/patient |
+| `metadata.sample_id` | string | HuBMAP identifier for the sample |
+| `metadata.vital_state` | string (enum) | `living` or `deceased` |
+| `metadata.health_status` | string (enum) | `cancer`, `relatively healthy`, `chronic illness` |
+| `metadata.organ_condition` | string (enum) | `healthy` or `diseased` |
+| `metadata.procedure_date` | string | Procurement date (YYYY-MM-DD) |
+| `metadata.perfusion_solution` | string (enum) | UWS, HTK, Belzer MPS/KPS, Formalin, Unknown, None |
+| `metadata.warm_ischemia_time_value` | integer | Warm ischemia time |
+| `metadata.warm_ischemia_time_unit` | string | Time unit |
+| `metadata.cold_ischemia_time_value` | integer | Cold ischemia time |
+| `metadata.cold_ischemia_time_unit` | string | Time unit |
+| `metadata.specimen_preservation_temperature` | string | Preservation method/temperature |
+| `metadata.specimen_quality_criteria` | string | RIN score |
+| `image_files` | array[File] | Uploaded image files |
+
+#### Dataset-Specific Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `title` | string | Dataset title |
+| `donor` | object (Donor) | Nested Donor object the tissue came from |
+| `donor.group_name` | string | Donor's group/lab name |
+| `donor.uuid` | string | Donor UUID |
+| `status` | string (enum) | New, Processing, QA, **Published**, Error, Hold, Invalid, Approval, Retracted |
+| `published_timestamp` | integer | Publication timestamp (ms since epoch) |
+| `contains_human_genetic_sequences` | boolean | True if data has human genetic sequence info |
+| `ingest_metadata` | object | Pipeline ingest metadata (assay-specific) |
+| `metadata` | object | Ingested experimental data metadata |
+| `files` | object | Ingested data files |
+| `contacts` | array[Person] | Main contact people |
+| `contributors` | array[Person] | Contributors to dataset creation |
+| `antibodies` | array[Antibody] | Antibodies used in assay |
+| `direct_ancestors` | array[Sample\|Dataset] | Direct parent entity(ies) |
+| `local_directory_rel_path` | string | Path on HIVE filesystem |
+| `thumbnail_file` | object | Thumbnail file details |
+| `error_message` | string | Last pipeline error message |
+| `sub_status` | string | Sub-status (e.g., "Retracted") |
+| `retraction_reason` | string | Retraction explanation |
+| `dbgap_sra_experiment_url` | string | Link to dbGaP uploaded data |
+| `dbgap_study_url` | string | Link to dbGaP study |
+| `creation_action` | string | Action representing dataset creation |
+
+#### Publication-Specific Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `title` | string | Publication title |
+| `publication_date` | string | Date of publication |
+| `publication_doi` | string | DOI (##.####/[alpha-numeric-string]) |
+| `publication_url` | string | Publisher URL |
+| `publication_venue` | string | Journal, conference, preprint server |
+| `volume` | integer | Journal volume |
+| `issue` | integer | Journal issue |
+| `pages_or_article_num` | string | Pages or article number |
+| `omap_doi` | string | DOI to Organ Mapping Antibody Panel |
+| `status` | string (enum) | Same status enum as Dataset |
+| `previous_revision_uuid` | string | Previous revision UUID |
+| `next_revision_uuid` | string | Next revision UUID |
+
+#### Collection-Specific Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `title` | string | Collection title |
+| `contacts` | array[Person] | Main contacts |
+| `contributors` | array[Person] | Contributors (analogous to author list) |
+| `datasets` | array[Dataset] | Datasets in the collection |
+
+#### ES Index Denormalized Fields
+
+The Elasticsearch index also contains denormalized fields for efficient querying. These are not in the entity API schemas but appear in ES documents:
+
+| Field | Type | Description |
+|---|---|---|
+| `ancestors` | array[{uuid, entity_type}] | All ancestor entities |
+| `descendants` | array[{uuid, entity_type}] | All descendant entities |
+| `immediate_ancestors` | array[{uuid, entity_type}] | Direct parent entities |
+| `immediate_descendants` | array[{uuid, entity_type}] | Direct child entities |
+| `origin_samples` | array[{uuid, entity_type, organ}] | Origin tissue samples |
+| `source_samples` | array[{uuid, entity_type}] | Source tissue samples |
+
+**Note on field name suffixes**: The spec examples use `.keyword` suffix for exact-match filtering on string fields (e.g., `entity_type.keyword`, `donor.group_name.keyword`, `status.keyword`). Use `.keyword` when filtering with `term`/`terms` to avoid analyzed-field surprises.
 
 ---
 
@@ -210,15 +329,41 @@ Default `_source` fields to return per entity type when user doesn't specify.
 
 ## 3. Executing the Query
 
+### Authentication
+
+Ask the user before sending:
+
+> "Should I query anonymously (Published entities only) or with a Globus Bearer token?"
+
+- **Anonymous**: No `Authorization` header. Only entities with `status: "Published"` are returned. Always add `{"term": {"status.keyword": "Published"}}` to the filter.
+- **Authenticated**: Ask the user for their Globus token. Include `Authorization: Bearer <token>` in the request headers.
+
+### Discover indexes (optional, before querying)
+
+To confirm which indexes are available:
+
+```
+GET https://search.api.hubmapconsortium.org/v3/indices
+```
+
+Response: `{"indices": ["entities", "portal"]}`
+
+- `entities` — full entity documents (default). Use for most queries.
+- `portal` — optimized for web portal display. May have different field names.
+
+Default to `entities` index unless the user specifies otherwise.
+
 ### Construct the POST request
 
-- **URL**: `https://search.api.hubmapconsortium.org/v3/search`
-  - Note: the exact path may differ. If you get a 404, inform the user and share the JSON query anyway.
+- **URL**: `https://search.api.hubmapconsortium.org/v3/search` (uses `entities` index by default)
+- **Alternative**: `https://search.api.hubmapconsortium.org/v3/{index_name}/search` for a specific index
 - **Method**: POST
-- **Headers**: `Content-Type: application/json`
+- **Headers**: `Content-Type: application/json` (plus `Authorization: Bearer <token>` if authenticated)
 - **Body**: the ElasticSearch JSON query constructed above
 
 ### Handle the response
+
+Standard ES response:
 
 ```json
 {
@@ -244,6 +389,11 @@ Interpret as a standard ES response:
 - `hits.total.value` — total matching documents
 - `hits.hits[]` — the returned documents (up to `size`)
 - `timed_out` — flag if query timed out
+
+### Special Response Behaviors
+
+- **303 (S3 Redirect)**: If the response payload exceeds ~10 MB, the API returns a 303 with a redirect URL. Follow the redirect to retrieve the full results from S3. Inform the user: "Large result set — retrieving from S3 redirect."
+- **504 (Gateway Timeout)**: The API has a 30-second max query/response time. If you get a 504, suggest the user narrow their query or use pagination with smaller `size` values.
 
 ### Error handling
 
@@ -341,6 +491,15 @@ Note: Not all ES filters can be expressed as portal URLs. If the query cannot be
 ### Endpoints
 - **Web Portal**: https://portal.hubmapconsortium.org/
 - **Search API**: https://search.api.hubmapconsortium.org/v3/
+- **GET /indices**: https://search.api.hubmapconsortium.org/v3/indices
+- **POST /search**: https://search.api.hubmapconsortium.org/v3/search
+- **POST /{index}/search**: https://search.api.hubmapconsortium.org/v3/{index_name}/search
+
+### Source of Truth
+The API specification is maintained at:
+`github.com/hubmapconsortium/search-api/blob/main/search-api-spec.yaml`
+
+Field schemas in this skill are derived from that spec. If the search behavior doesn't match expectations, consult the spec for the most current definitions.
 
 ### Default query parameters
 | Param | Value |
