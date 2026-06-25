@@ -165,13 +165,16 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 | single-assay dataset | assay_modality, creation_action | `single`, `Create Dataset Activity` |
 | multi-assay dataset | assay_modality, creation_action | `multiple`, `Create Dataset Activity` |
 | component dataset | creation_action | `Multi-Assay Split` |
-| *to be filled by user* | *...* | *...* |
-
-Common patterns to document here:
-- Assay types → controlled assay terms (e.g., "ATACseq" → ["Bulk ATACseq", "scATACseq"])
-- Data types → dataset_type values
-- Group/lab names → contributor, group_name, or similar
-- Analyte classes → e.g., "Protein", "DNA", "RNA"
+| affiliation, group, lab, team, data provider, TMC, university | group_name | *filter by the specific group name* |
+| all ATACseq | dataset_type | ["ATACseq", "Bulk ATACseq", "sciATACseq", "snATACseq-multiome", "snATACseq", "snATACseq (SNARE-seq2)"] |
+| all RNAseq | dataset_type | ["RNAseq", "Bulk RNAseq", "Capture bead RNAseq (10x Genomics v3)", "RNAseq (with probes)", "sciRNAseq", "scRNAseq (10x Genomics v2)", "scRNAseq (10x Genomics v3)", "snRNAseq (10x Genomics v2)", "snRNAseq (10x Genomics v3)", "snRNAseq (SNARE-seq2)"] |
+| all DESI | dataset_type | ["DESI", "NanoDESI"] |
+| all Histology | dataset_type | ["Histology", "AB-PAS Stained Microscopy", "PAS Stained Microscopy"] |
+| whole-genome survey | dataset_type | WGS |
+| AF | dataset_type | Auto-fluorescence |
+| Nucleic acid and protein | analyte_type | Nucleic acid + Protein |
+| DNA and RNA | analyte_type | DNA + RNA |
+| Lipid and metabolite | analyte_type | Lipid + Metabolite |
 
 ---
 
