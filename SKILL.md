@@ -47,7 +47,6 @@ Agent asks: "Save results? (JSON/CSV/both/skip)"
   │
   ▼
 If yes → write file(s) to disk
-Agent offers portal search link when applicable
 ```
 
 ---
@@ -468,9 +467,6 @@ Found 142 results. Showing first 10:
 ...
 
 Total: 142 results (showing first 10 of 5000 per-page limit)
-
----
-**Portal search link**: https://portal.hubmapconsortium.org/search/datasets?organ=Kidney&assay=scRNAseq&group=Stanford
 ```
 
 For each hit, show key identifying fields (UUID, title, organ, assay, group). Truncate long titles.
@@ -509,35 +505,6 @@ Save results to file?
   - Use comma as delimiter
   - Quote fields containing commas, newlines, or double-quotes (standard CSV quoting)
   - Include a header row with column names
-
----
-
-## 6. Portal Search Link Generation
-
-When the query's filters can be represented on the web portal, generate a human-friendly URL.
-
-### URL Pattern
-
-```
-https://portal.hubmapconsortium.org/search/{entity_type_lower}?{param1}={value1}&{param2}={value2}
-```
-
-Multi-value filters use dot-separated syntax:
-
-```
-https://portal.hubmapconsortium.org/search/datasets?organ=Kidney+(Left)&analyte=Protein&dataset_type=Histology.PAS+Stained+Microscopy
-```
-
-### [[URL_PARAM_MAPPINGS]]
-
-**ES filter field** → **URL query param name** → **Notes**
-
-| ES Field | URL Param | Notes |
-|---|---|---|
-| *to be filled by user* | *...* | *...* |
-
-Note: Not all ES filters can be expressed as portal URLs. If the query cannot be reasonably translated to a portal URL, skip this step.
-
 ---
 
 ## Appendix: Quick Reference
