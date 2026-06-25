@@ -73,6 +73,32 @@ If yes → write file(s) to disk
 
 4. **Pagination** — if user seems to expect more than 5000 results, ask about pagination.
 
+5. **Multi-assay dataset type** — if the user's query includes a multi-assay `dataset_type` (e.g., "10X Multiome", "SNARE-seq2", "Visium (no probes)"), inform the user:
+   - "That's a multi-assay dataset type with component types: `{components}`. Would you like to search for the multi-assay parent datasets, or for specific component types?"
+
+### Dataset Classification
+
+A user may ask for "primary datasets" or "derived datasets" — these are defined by specific ES field conditions. The agent should use these rules to translate the user's intent into the correct ES filter(s).
+
+**Primary** — `creation_action` is `Create Dataset Activity` or `Multi-Assay Split`, AND `processing` == `raw`:
+- **Single-assay**: `assay_modality` == `single` AND `creation_action` == `Create Dataset Activity` AND any `descendants` have square brackets `[ ]` in their `dataset_type`
+- **Multi-assay**: `assay_modality` == `multiple` AND `creation_action` == `Create Dataset Activity` AND there are descendants without square brackets `[ ]` in their `dataset_type`
+- **Component**: `assay_modality` == `multiple` AND `creation_action` == `Multi-Assay Split`
+
+**Derived** — `creation_action` == `Central Process` AND `dataset_type` contains square brackets `[ ]` around the processing pipeline name.
+
+Current multi-assay dataset types and their components:
+
+| Multi-assay Type | Component Types |
+|---|---|
+| `10X Multiome` | ATACseq, RNAseq |
+| `SNARE-seq2` | ATACseq, RNAseq |
+| `Visium (no probes)` | Histology, RNAseq |
+
+The following use multiple information types but deliver a single combined dataset (NOT multi-assay in HuBMAP): PhenoCycler, Slide-seq, CODEX.
+
+> **Default assumption**: Unless the user explicitly asks for Derived datasets, assume they want Primary datasets. Add `creation_action` filter for `Create Dataset Activity` or `Multi-Assay Split` (AND `processing` == `raw`) by default when querying Datasets.
+
 ---
 
 ### [[VOCABULARY_MAPPINGS]]
@@ -134,6 +160,11 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 
 | Natural Language Term | ES Field | ES Value(s) |
 |---|---|---|
+| primary dataset | creation_action, processing | `Create Dataset Activity` or `Multi-Assay Split`, AND `raw` |
+| derived dataset | creation_action, dataset_type | `Central Process`, AND contains `[...]` in dataset_type |
+| single-assay dataset | assay_modality, creation_action | `single`, `Create Dataset Activity` |
+| multi-assay dataset | assay_modality, creation_action | `multiple`, `Create Dataset Activity` |
+| component dataset | creation_action | `Multi-Assay Split` |
 | *to be filled by user* | *...* | *...* |
 
 Common patterns to document here:
@@ -148,11 +179,16 @@ Common patterns to document here:
 
 ### Default Query Template
 
+When querying Datasets, the primary-dataset filter is applied by default (unless the user explicitly asks for Derived):
+
 ```json
 {
   "query": {
     "bool": {
-      "filter": []
+      "filter": [
+        {"terms": {"creation_action.keyword": ["Create Dataset Activity", "Multi-Assay Split"]}},
+        {"term": {"processing.keyword": "raw"}}
+      ]
     }
   },
   "_source": [...],
@@ -160,6 +196,8 @@ Common patterns to document here:
   "size": 5000
 }
 ```
+
+Remove the `creation_action` and `processing` filters if the user explicitly wants Derived datasets.
 
 ### Filter Patterns
 
