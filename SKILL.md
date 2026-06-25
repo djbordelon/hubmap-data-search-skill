@@ -165,7 +165,7 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 | single-assay dataset | assay_modality, creation_action | `single`, `Create Dataset Activity` |
 | multi-assay dataset | assay_modality, creation_action | `multiple`, `Create Dataset Activity` |
 | component dataset | creation_action | `Multi-Assay Split` |
-| affiliation, group, lab, team, data provider, TMC, university | group_name | *filter by the specific group name* |
+| affiliation, group, lab, team, data provider, TMC, university | group_name | *use wildcard partial matching* — the user may specify only part of the name (e.g., `"Stanford"` matches `"Stanford TMC"` and `"TMC - Stanford"`) |
 | all ATACseq | dataset_type | ["ATACseq", "Bulk ATACseq", "sciATACseq", "snATACseq-multiome", "snATACseq", "snATACseq (SNARE-seq2)"] |
 | all RNAseq | dataset_type | ["RNAseq", "Bulk RNAseq", "Capture bead RNAseq (10x Genomics v3)", "RNAseq (with probes)", "sciRNAseq", "scRNAseq (10x Genomics v2)", "scRNAseq (10x Genomics v3)", "snRNAseq (10x Genomics v2)", "snRNAseq (10x Genomics v3)", "snRNAseq (SNARE-seq2)"] |
 | all DESI | dataset_type | ["DESI", "NanoDESI"] |
@@ -210,10 +210,25 @@ Use `term` for exact-match single values:
 {"term": {"entity_type.keyword": "Dataset"}}
 ```
 
-Use `terms` for multi-value filters (OR logic within same field):
+Use `terms` for multi-value filters (OR logic within same field, exact match):
 
 ```json
-{"terms": {"donor.group_name.keyword": ["Stanford", "Vanderbilt TMC"]}}
+{"terms": {"dataset_type.keyword": ["ATACseq", "RNAseq"]}}
+```
+
+Use `wildcard` for **partial string matching** — always use this for `group_name` since the DB value may embed the user's term (e.g., `"Stanford"` inside `"TMC - Stanford"` or `"Stanford TMC"`):
+
+```json
+{"wildcard": {"donor.group_name.keyword": "*Stanford*"}}
+```
+
+For multiple partial matches (OR logic), wrap `wildcard` clauses in a `bool` `should`:
+
+```json
+{"bool": {"should": [
+  {"wildcard": {"donor.group_name.keyword": "*Stanford*"}},
+  {"wildcard": {"donor.group_name.keyword": "*Vanderbilt*"}}
+]}}
 ```
 
 Use `range` for numeric/date ranges (timestamps are milliseconds since epoch):
@@ -237,7 +252,7 @@ Combine multiple filters in the `filter` array (AND logic):
       "filter": [
         {"term": {"entity_type.keyword": "Dataset"}},
         {"term": {"status.keyword": "Published"}},
-        {"terms": {"donor.group_name.keyword": ["Stanford", "Vanderbilt TMC"]}}
+        {"wildcard": {"donor.group_name.keyword": "*Stanford*"}}
       ]
     }
   }
@@ -401,7 +416,9 @@ The Elasticsearch index also contains denormalized fields for efficient querying
 | `origin_samples` | array[{uuid, entity_type, organ}] | Origin tissue samples |
 | `source_samples` | array[{uuid, entity_type}] | Source tissue samples |
 
-**Note on field name suffixes**: The spec examples use `.keyword` suffix for exact-match filtering on string fields (e.g., `entity_type.keyword`, `donor.group_name.keyword`, `status.keyword`). Use `.keyword` when filtering with `term`/`terms` to avoid analyzed-field surprises.
+**Note on field name suffixes**: The spec examples use `.keyword` suffix for exact-match filtering on string fields (e.g., `entity_type.keyword`, `status.keyword`). Use `.keyword` when filtering with `term`/`terms` to avoid analyzed-field surprises.
+
+**⚠️ Exception — `group_name`**: Always use `wildcard` on the `.keyword` field for `group_name` (e.g., `{"wildcard": {"donor.group_name.keyword": "*Stanford*"}}`). Group names in the database may embed the lab name in longer strings (e.g., `"TMC - Stanford"`, `"Stanford TMC"`), so exact `term`/`terms` matching will miss results.
 
 ---
 
