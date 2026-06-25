@@ -315,15 +315,17 @@ The Elasticsearch index also contains denormalized fields for efficient querying
 
 ### [[DEFAULT_FIELDS]]
 
-Default `_source` fields to return per entity type when user doesn't specify.
+Default `_source` fields to return per entity type when user doesn't specify. These are reasonable defaults — the agent may ask the user to confirm or customize.
 
 | Entity Type | Default Fields |
 |---|---|
-| **Dataset** | *to be filled by user* |
-| **Sample** | *to be filled by user* |
-| **Donor** | *to be filled by user* |
-| **Collection** | *to be filled by user* |
-| **Publication** | *to be filled by user* |
+| **Dataset** | hubmap_id, group_name, dataset_type, origin_samples.organ, status, published_timestamp |
+| **Sample** | hubmap_id, group_name, sample_category, organ, created_timestamp |
+| **Donor** | hubmap_id, group_name, age, BMI, sex, race, created_timestamp |
+| **Collection** | hubmap_id, title, group_name, status, publication_date |
+| **Publication** | hubmap_id, title, group_name, status, publication_date |
+
+**Note**: `age`, `BMI`, `sex`, `race` for Donor are conceptual fields that map to entries within `metadata.organ_donor_data` or `metadata.living_donor_data` (UMLS-coded). The agent should search the DonorMetadata array using the `grouping_concept_preferred_term` or `preferred_term` to locate the relevant value. If these fields are not found, return them as `null` in the summary.
 
 ---
 
