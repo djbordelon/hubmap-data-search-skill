@@ -78,14 +78,66 @@ Agent offers portal search link when applicable
 
 ### [[VOCABULARY_MAPPINGS]]
 
-**NL term** → **ES field + value(s)**
+The agent should use this table and the ontology API to translate natural-language terms to ES field values.
+
+#### Organ Code ↔ Name Mapping
+
+The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. Use this table for translation. The authoritative source is `GET https://ontology.api.hubmapconsortium.org/organs/by-code?application_context=HUBMAP` — the agent may fetch it dynamically for the most current data.
+
+| Code | Organ Name |
+|---|---|
+| AD | Adipose Tissue |
+| BD | Blood |
+| BL | Bladder |
+| BM | Bone Marrow |
+| BR | Brain |
+| BV | Blood Vasculature |
+| HT | Heart |
+| ID | Intervertebral Disc |
+| LA | Larynx |
+| LB | Bronchus (Left) |
+| LE | Eye (Left) |
+| LF | Fallopian Tube (Left) |
+| LI | Large Intestine |
+| LK | Kidney (Left) |
+| LL | Lung (Left) |
+| LN | Knee (Left) |
+| LO | Ovary (Left) |
+| LT | Tonsil (Left) |
+| LU | Ureter (Left) |
+| LV | Liver |
+| LY | Lymph Node |
+| ML | Mammary Gland (Left) |
+| MR | Mammary Gland (Right) |
+| PA | Pancreas |
+| PL | Placenta |
+| PR | Prostate |
+| PV | Pelvis |
+| RB | Bronchus (Right) |
+| RE | Eye (Right) |
+| RF | Fallopian Tube (Right) |
+| RK | Kidney (Right) |
+| RL | Lung (Right) |
+| RN | Knee (Right) |
+| RO | Ovary (Right) |
+| RT | Tonsil (Right) |
+| RU | Ureter (Right) |
+| SC | Spinal Cord |
+| SI | Small Intestine |
+| SK | Skin |
+| SP | Spleen |
+| TH | Thymus |
+| TR | Trachea |
+| UT | Uterus |
+| VL | Lymphatic Vasculature |
+
+#### Other Vocabulary Mappings
 
 | Natural Language Term | ES Field | ES Value(s) |
 |---|---|---|
 | *to be filled by user* | *...* | *...* |
 
 Common patterns to document here:
-- Organ names → controlled organ terms (e.g., "kidney" → ["Kidney", "Kidney (Left)", "Kidney (Right)"])
 - Assay types → controlled assay terms (e.g., "ATACseq" → ["Bulk ATACseq", "scATACseq"])
 - Data types → dataset_type values
 - Group/lab names → contributor, group_name, or similar
