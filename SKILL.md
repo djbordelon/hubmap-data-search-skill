@@ -166,6 +166,18 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 | multi-assay dataset | assay_modality, creation_action | `multiple`, `Create Dataset Activity` |
 | component dataset | creation_action | `Multi-Assay Split` |
 | affiliation, group, lab, team, data provider, TMC, university | group_name | *use wildcard partial matching* — the user may specify only part of the name (e.g., `"Stanford"` matches `"Stanford TMC"` and `"TMC - Stanford"`) |
+| CHOP | group_name | `TMC - Children's Hospital of Philadelphia` |
+| WashU, WashU Kidney | group_name | `Washington University Kidney TMC` |
+| URMC | group_name | `University of Rochester Medical Center TMC` |
+| Cal Tech, CalTech | group_name | `California Institute of Technology TMC` |
+| GE | group_name | `General Electric RTI` |
+| PNNL | group_name | `TMC - Pacific Northwest National Laboratory` |
+| UCSD | group_name | `University of California San Diego TMC` |
+| UCSD female reproduction, UCSD fem repro | group_name | `TMC - University of California San Diego focusing on female reproduction` |
+| UConn and Scripps | group_name | `TMC - University of Connecticut and Scripps` |
+| UPenn, Penn | group_name | `TMC - University of Pennsylvania` |
+| Penn State and Columbia | group_name | `TTD - Penn State University and Columbia University` |
+| UCSD and City of Hope | group_name | `TTD - University of San Diego and City of Hope` |
 | all ATACseq | dataset_type | ["ATACseq", "Bulk ATACseq", "sciATACseq", "snATACseq-multiome", "snATACseq", "snATACseq (SNARE-seq2)"] |
 | all RNAseq | dataset_type | ["RNAseq", "Bulk RNAseq", "Capture bead RNAseq (10x Genomics v3)", "RNAseq (with probes)", "sciRNAseq", "scRNAseq (10x Genomics v2)", "scRNAseq (10x Genomics v3)", "snRNAseq (10x Genomics v2)", "snRNAseq (10x Genomics v3)", "snRNAseq (SNARE-seq2)"] |
 | all DESI | dataset_type | ["DESI", "NanoDESI"] |
@@ -245,6 +257,40 @@ seqFISH [Lab Processed]
 Slide-seq [Salmon]
 SNARE-seq2 [Salmon + ArchR + Muon]
 Visium (no probes) [Salmon + Scanpy]
+```
+
+---
+
+### [[GROUP_NAME_VALUES]]
+
+The `group_name` field identifies data providers (TMCs, Tissue Transfer Programs, RTIs, etc.). Group names are free-form strings that may embed partial names — always use wildcard matching when querying (see [[VOCABULARY_MAPPINGS]]). If the user asks what groups are available, reference the list below but offer to run a fresh terms aggregation on `group_name.keyword` for the current set.
+
+```
+Broad Institute RTI
+California Institute of Technology TMC
+EXT - Human Cell Atlas
+General Electric RTI
+IEC Testing Group
+MC - IU
+Northwestern RTI
+Purdue TTD
+Stanford RTI
+Stanford TMC
+Stanford University Bone Marrow TMC
+TC - University of Florida
+TMC - Children's Hospital of Philadelphia
+TMC - Pacific Northwest National Laboratory
+TMC - University of California San Diego focusing on female reproduction
+TMC - University of Connecticut and Scripps
+TMC - University of Pennsylvania
+TTD - Pacific Northwest National Laboratory
+TTD - Penn State University and Columbia University
+TTD - University of San Diego and City of Hope
+University of California San Diego TMC
+University of Florida TMC
+University of Rochester Medical Center TMC
+Vanderbilt TMC
+Washington University Kidney TMC
 ```
 
 ---
