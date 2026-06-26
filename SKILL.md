@@ -533,7 +533,7 @@ The Elasticsearch index also contains denormalized fields for efficient querying
 | `origin_samples` | array[{uuid, entity_type, organ}] | Origin tissue samples |
 | `source_samples` | array[{uuid, entity_type}] | Source tissue samples |
 
-**Note on field name suffixes**: The spec examples use `.keyword` suffix for exact-match filtering on string fields (e.g., `entity_type.keyword`, `status.keyword`). Use `.keyword` when filtering with `term`/`terms` to avoid analyzed-field surprises.
+**Note on field name suffixes**: The spec examples use `.keyword` suffix for exact-match filtering on string fields (e.g., `entity_type.keyword`, `status.keyword`). Use `.keyword` when filtering with `term`/`terms` to avoid analyzed-field surprises. This applies to nested fields within arrays too — for example, filter on `origin_samples.organ.keyword` (not `origin_samples.organ`) and aggregate on `origin_samples.organ.keyword` (not `origin_samples.organ`). Note that `_source` selection does not use `.keyword`; it's only needed for filtering and aggregations.
 
 **⚠️ Exception — `group_name`**: Always use `wildcard` on the `.keyword` field for `group_name` (e.g., `{"wildcard": {"donor.group_name.keyword": "*Stanford*"}}`). Group names in the database may embed the lab name in longer strings (e.g., `"TMC - Stanford"`, `"Stanford TMC"`), so exact `term`/`terms` matching will miss results.
 
@@ -637,14 +637,14 @@ After receiving results, display to the user:
 ```
 Found 142 results. Showing first 10:
 
-1. HuBMAP ID: HBM###.XXXX.### | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
-2. HuBMAP ID: HBM###.XXXX.### | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
+1. [HBM###.XXXX.###](https://portal.hubmapconsortium.org/browse/dataset/{_id}) | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
+2. [HBM###.XXXX.###](https://portal.hubmapconsortium.org/browse/dataset/{_id}) | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
 ...
 
 Total: 142 results (showing first 10 of 5000 per-page limit)
 ```
 
-For each hit, show key identifying fields (hubmap_id, title, organ, assay, group). Truncate long titles.
+For each hit, show key identifying fields (hubmap_id as a portal link, title, organ, assay, group). Use the hit's `_id` as the UUID in the portal URL: `https://portal.hubmapconsortium.org/browse/dataset/{_id}`. Truncate long titles.
 
 Offer to answer specific follow-up questions about the results.
 
