@@ -637,14 +637,14 @@ After receiving results, display to the user:
 ```
 Found 142 results. Showing first 10:
 
-1. UUID: abc123 | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
-2. UUID: def456 | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
+1. HuBMAP ID: HBM###.XXXX.### | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
+2. HuBMAP ID: HBM###.XXXX.### | Title: "... | Organ: Kidney | Assay: scRNAseq | Group: Stanford
 ...
 
 Total: 142 results (showing first 10 of 5000 per-page limit)
 ```
 
-For each hit, show key identifying fields (UUID, title, organ, assay, group). Truncate long titles.
+For each hit, show key identifying fields (hubmap_id, title, organ, assay, group). Truncate long titles.
 
 Offer to answer specific follow-up questions about the results.
 
