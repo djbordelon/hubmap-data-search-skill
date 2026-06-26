@@ -178,6 +178,75 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 
 ---
 
+### [[DATASET_TYPE_VALUES]]
+
+The Search API's `dataset_type` field contains distinct values across published Datasets. Values with brackets `[...]` indicate a processing pipeline has been applied to a primary type. When a user provides a partial or inexact name (e.g., "CODEX"), scan both tables for matches. If a name matches entries in both tables, inform the user and ask whether they want primary, derived, or both. For common base types (ATACseq, RNAseq, Histology), consider offering a roll-up of all variants.
+
+Alphabetical lists:
+
+#### Primary Dataset Types (no brackets)
+
+```
+10X Multiome
+2D Imaging Mass Cytometry
+3D Imaging Mass Cytometry
+ATACseq
+Auto-fluorescence
+Cell DIVE
+CODEX
+CosMx Transcriptomics
+CyTOF
+DESI
+GeoMx (NGS)
+Histology
+LC-MS
+Light Sheet
+MALDI
+MIBI
+MUSIC
+PhenoCycler
+RNAseq
+RNAseq (with probes)
+seqFISH
+Slide-seq
+SNARE-seq2
+Visium (no probes)
+WGS
+```
+
+#### Derived / Processed Variants (with `[...]`)
+
+```
+10X Multiome [Salmon + ArchR + Muon]
+2D Imaging Mass Cytometry [Image Pyramid]
+3D Imaging Mass Cytometry [Image Pyramid]
+ATACseq [ArchR]
+ATACseq [BWA + MACS2]
+ATACseq [Lab Processed]
+ATACseq [SnapATAC]
+Auto-fluorescence [Image Pyramid]
+Cell DIVE [DeepCell + SPRM]
+CODEX [Cytokit + SPRM]
+DESI [Image Pyramid]
+Histology [Image Pyramid]
+Histology [Kaggle-1 Glomerulus Segmentation]
+Histology [Kaggle-1 Segmentation]
+Light Sheet [Image Pyramid]
+MALDI [Image Pyramid]
+MIBI [DeepCell + SPRM]
+PhenoCycler [DeepCell + SPRM]
+Publication [ancillary]
+RNAseq [Lab Processed]
+RNAseq [Salmon]
+seqFISH [Image Pyramid]
+seqFISH [Lab Processed]
+Slide-seq [Salmon]
+SNARE-seq2 [Salmon + ArchR + Muon]
+Visium (no probes) [Salmon + Scanpy]
+```
+
+---
+
 ## 2. ElasticSearch Query Construction
 
 ### Default Query Template
