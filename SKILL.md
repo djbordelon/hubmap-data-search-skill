@@ -184,9 +184,9 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 | all Histology | dataset_type | ["Histology", "AB-PAS Stained Microscopy", "PAS Stained Microscopy"] |
 | whole-genome survey | dataset_type | WGS |
 | AF | dataset_type | Auto-fluorescence |
-| Nucleic acid and protein | analyte_type | Nucleic acid + Protein |
-| DNA and RNA | analyte_type | DNA + RNA |
-| Lipid and metabolite | analyte_type | Lipid + Metabolite |
+| Nucleic acid and protein | metadata.analyte_class | `Nucleic acid + Protein` |
+| DNA and RNA | metadata.analyte_class | `DNA + RNA` |
+| Lipid and metabolite | metadata.analyte_class | `Lipid + metabolite` |
 
 ---
 
@@ -291,6 +291,27 @@ University of Florida TMC
 University of Rochester Medical Center TMC
 Vanderbilt TMC
 Washington University Kidney TMC
+```
+
+---
+
+### [[ANALYTE_CLASS_VALUES]]
+
+The `metadata.analyte_class` field identifies what type of analyte was measured in an assay (e.g., RNA, Protein, DNA). If the user asks what analyte classes are available, reference the list below but offer to run a fresh terms aggregation on `metadata.analyte_class.keyword` for the current set.
+
+```
+Chromatin
+DNA
+DNA + RNA
+Endogenous fluorophore
+Lipid
+Lipid + metabolite
+Metabolite
+Nucleic acid + Protein
+Peptide
+Polysaccharide
+Protein
+RNA
 ```
 
 ---
