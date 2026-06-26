@@ -182,6 +182,8 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 
 The Search API's `dataset_type` field contains distinct values across published Datasets. Values with brackets `[...]` indicate a processing pipeline has been applied to a primary type. When a user provides a partial or inexact name (e.g., "CODEX"), scan both tables for matches. If a name matches entries in both tables, inform the user and ask whether they want primary, derived, or both. For common base types (ATACseq, RNAseq, Histology), consider offering a roll-up of all variants.
 
+If the user asks what dataset types are available, reference the lists below as a quick answer. However, these values were captured at a point in time and may not reflect the latest data. Offer to run a fresh terms aggregation on `dataset_type.keyword` to get the definitive current list from the live API.
+
 Alphabetical lists:
 
 #### Primary Dataset Types (no brackets)
