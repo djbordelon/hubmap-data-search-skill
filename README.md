@@ -1,4 +1,4 @@
-# HuBMAP Data Portal Skill
+# HuBMAP Data Search Skill
 
 An [OpenCode](https://opencode.ai) skill that translates natural language search requests into ElasticSearch JSON queries against the [HuBMAP Data Portal Search API](https://search.api.hubmapconsortium.org/v3/).
 
@@ -27,7 +27,7 @@ Clone or symlink into your OpenCode skills directory:
 
 ```bash
 mkdir -p ~/.config/opencode/skills
-git clone <this-repo-url> ~/.config/opencode/skills/hubmap-data-portal
+git clone <this-repo-url> ~/.config/opencode/skills/hubmap-data-search
 ```
 
 The skill is auto-discovered by OpenCode on next launch.
@@ -37,7 +37,7 @@ The skill is auto-discovered by OpenCode on next launch.
 Invoke the skill in OpenCode, then ask in natural language:
 
 ```
-Skill: "hubmap-data-portal"
+Skill: "hubmap-data-search"
 
 User: "Find all published scRNAseq datasets from Vanderbilt"
 Agent: (parses query, builds ES JSON, asks to confirm, sends request, summarizes results)

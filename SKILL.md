@@ -1,5 +1,5 @@
 ---
-name: hubmap-data-portal
+name: hubmap-data-search
 description: Translate natural language queries into ElasticSearch JSON for the HuBMAP Data Portal search API, execute queries via POST, summarize results, and optionally save to JSON/CSV files
 ---
 
