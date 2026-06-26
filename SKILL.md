@@ -76,6 +76,10 @@ If yes → write file(s) to disk
 5. **Multi-assay dataset type** — if the user's query includes a multi-assay `dataset_type` (e.g., "10X Multiome", "SNARE-seq2", "Visium (no probes)"), inform the user:
    - "That's a multi-assay dataset type with component types: `{components}`. Would you like to search for the multi-assay parent datasets, or for specific component types?"
 
+6. **Ambiguous group name** — when the user mentions a term that matches multiple groups in [[GROUP_NAME_VALUES]], list the matching options and ask which they want. This applies to:
+   - **Stanford** — matches `Stanford RTI`, `Stanford TMC`, `Stanford University Bone Marrow TMC`
+   - **UCSD** — matches `University of California San Diego TMC`, `TMC - University of California San Diego focusing on female reproduction`
+
 ### Dataset Classification
 
 A user may ask for "primary datasets" or "derived datasets" — these are defined by specific ES field conditions. The agent should use these rules to translate the user's intent into the correct ES filter(s).
@@ -166,6 +170,7 @@ The ES `organ` field (on Sample and `origin_samples`) stores two-letter codes. U
 | multi-assay dataset | assay_modality, creation_action | `multiple`, `Create Dataset Activity` |
 | component dataset | creation_action | `Multi-Assay Split` |
 | affiliation, group, lab, team, data provider, TMC, university | group_name | *use wildcard partial matching* — the user may specify only part of the name (e.g., `"Stanford"` matches `"Stanford TMC"` and `"TMC - Stanford"`) |
+| Stanford Bone Marrow | group_name | `Stanford University Bone Marrow TMC` |
 | CHOP | group_name | `TMC - Children's Hospital of Philadelphia` |
 | WashU, WashU Kidney | group_name | `Washington University Kidney TMC` |
 | URMC | group_name | `University of Rochester Medical Center TMC` |
